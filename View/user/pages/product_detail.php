@@ -217,7 +217,7 @@ if ($catalog->getName() == "Racket") {
 
                     <fieldset class="pro-discount uu-dai" style="margin-top: 10px;">
                         <legend>
-                            <img src="../../images/icon/code_dis.gif" alt="khuyến mãi">ƯU ĐÃI
+                            <img src="../View/images/icon/code_dis.gif" alt="khuyến mãi">ƯU ĐÃI
                         </legend>
                         <div class="product-promotions-list-content">
                             <p>
@@ -302,7 +302,7 @@ if ($catalog->getName() == "Racket") {
                                                                             echo "soldout";
                                                                         endif; ?> color-<?php echo $color; ?>" data-value="<?php echo $color; ?>" data-value_2="<?php echo $color; ?>">
                                                 <input onclick="<?php if ($catalog->getName() == 'Shoes') echo 'loadSize';
-                                                                else echo 'loadVersion' ?>('<?php echo json_encode($productID); ?>', '<?php echo $color; ?>')" <?php if ($modelVariantDetail->getVariantQuantityByColor($listVariantDetails, $color) <= 0) :
+                                                                else echo 'loadVersion' ?>('<?php echo $productID; ?>', '<?php echo $color; ?>')" <?php if ($modelVariantDetail->getVariantQuantityByColor($listVariantDetails, $color) <= 0) :
                                                                                                                                                                     echo "disabled";
                                                                                                                                                                 endif; ?> id="color-<?php echo $color; ?>" type="radio" name="color" value="<?php echo $color; ?>">
                                                 <label for="color-<?php echo $color; ?>">
@@ -363,7 +363,7 @@ if ($catalog->getName() == "Racket") {
                                 <div class="flex-quantity">
                                     <div class="custom custom-btn-number show">
                                         <div class="input_number_product">
-                                            <button class="btn_num num_1 button button_qty" onclick="var result = document.getElementById('qtym'); var qtypro = result.value; if( !isNaN( qtypro ) &amp;&amp; qtypro > 1 ) result.value--;return false;" type="button">-</button>
+                                            <button class="btn_num num_1 button button_qty" onclick="var result = document.getElementById('qtym'); var qtypro = result.value; if( !isNaN( qtypro ) &amp; &amp; qtypro > 1 ) result.value--;return false;" type="button">-</button>
                                             <input type="text" id="qtym" name="so_luong" value="1" maxlength="3" class="form-control prd_quantity" onkeypress="if ( isNaN(this.value + String.fromCharCode(event.keyCode) )) return false;" onchange="if(this.value == 0)this.value=1;">
                                             <button class="btn_num num_2 button button_qty" onclick="var result = document.getElementById('qtym'); var qtypro = result.value; if( !isNaN( qtypro )) result.value++;return false;" type="button"><span>+</span></button>
                                         </div>

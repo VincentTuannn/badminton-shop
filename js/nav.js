@@ -1,5 +1,47 @@
 countFilter = 0;
 filterArray = [];
+selectedFilters = {};
+
+function uncheckAllInputs() {
+    // Lấy tất cả các phần tử input trên trang
+    var inputs = document.querySelectorAll('input[type="checkbox"]');
+    
+    // Lặp qua mỗi phần tử và bỏ chọn (unchecked) nó
+    inputs.forEach(function(input) {
+        input.checked = false;
+    });
+}
+
+function getAllByCatalogAndBrand() {
+    return new Promise(function(resolve, reject) {
+        var xhttp = new XMLHttpRequest();
+
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4) {
+                if (this.status == 200) {
+                    var listVariantDetails = JSON.parse(this.responseText);
+                    resolve(listVariantDetails); // Trả về dữ liệu khi hoàn thành
+                } else {
+                    reject(new Error("Yêu cầu thất bại")); // Báo lỗi nếu yêu cầu không thành công
+                }
+            }
+        };
+
+        xhttp.open("GET", "http://localhost/badminton-shop/Controllers/ProductNavController.php?getAll=true&id="+getIdFromUrl(), true);
+        xhttp.send();
+    });
+}
+
+// Sử dụng promise
+getAllByCatalogAndBrand()
+    .then(function(data) {
+        filterArray = data;
+    })
+    .catch(function(error) {
+        console.error("Lỗi:", error);
+    });
+
+
 
 function loadPage(page, productsPerPage, id) {
     var xhttp = new XMLHttpRequest();
@@ -9,17 +51,17 @@ function loadPage(page, productsPerPage, id) {
             var listVariantDetails = JSON.parse(this.responseText);
             var htmlContent = '';
             for (var i = 0; i < listVariantDetails.length; i++) {
-                htmlContent += `<div class="col-6 col-md-4">
+                htmlContent += `<div class="col-6 col-md-3">
                     <div class="item_product_main">
                         <div class="product-thumbnail">
-                            <a class="product_overlay" href="product_detail.php?productID=`+ listVariantDetails[i].productID + `" title=""></a>
-                            <a class="image_thumb" href="product_detail.php?productID=`+ listVariantDetails[i].productID + `" title="">
+                            <a class="product_overlay" href="index.php?control=ProductDetail&productID=`+ listVariantDetails[i].productID + `" title=""></a>
+                            <a class="image_thumb" href="index.php?control=ProductDetail&productID=`+ listVariantDetails[i].productID + `" title="">
                                 <img width="300" height="300" class="lazyload loaded" src="https://cdn.shopvnb.com/img/300x300/uploads/gallery/vot-cau-long-victor-brave-sword-ltd-pro-noi-dia-taiwan-jpg-4_1711143954.webp" data-src="https://cdn.shopvnb.com/img/300x300/uploads/gallery/vot-cau-long-victor-brave-sword-ltd-pro-noi-dia-taiwan-jpg-4_1711143954.webp" alt="Vợt Cầu Lông Victor Brave Sword LTD Pro (Nội Địa Taiwan)" data-was-processed="true">
                             </a>
                         </div>
                         <div class="product-info">
-                            <h3 class="product-name"><a href="product_detail.php?productID=`+ listVariantDetails[i].productID + `" title="Vợt Cầu Lông Victor Brave Sword LTD Pro (Nội Địa Taiwan)">` + listVariantDetails[i].name + `</a></h3>
-                            <div class="price-box">
+                            <h3 class="product-name"><a href="index.php?control=ProductDetail&productID=`+ listVariantDetails[i].productID + `" title="Vợt Cầu Lông Victor Brave Sword LTD Pro (Nội Địa Taiwan)">` + listVariantDetails[i].name + `</a></h3>
+                            <div class="price-box-nav">
                                 <span class="price">`+ formatPrice(listVariantDetails[i].price) + ` ₫</span>
                             </div>
                         </div>
@@ -45,8 +87,65 @@ function loadPage(page, productsPerPage, id) {
     xhttp.send();
 }
 
+function loadPageFilter(page, productsPerPage) {
+
+    var offset = (page - 1) * productsPerPage;
+    var productsOnCurrentPage = filterArray.slice(offset, offset + productsPerPage);
+
+    var htmlContent = '';
+    for (var i = 0; i < productsOnCurrentPage.length; i++) {
+        htmlContent += `<div class="col-6 col-md-3">
+                    <div class="item_product_main">
+                        <div class="product-thumbnail">
+                            <a class="product_overlay" href="index.php?control=ProductDetail&productID=`+ productsOnCurrentPage[i].productID + `" title=""></a>
+                            <a class="image_thumb" href="index.php?control=ProductDetail&productID=`+ productsOnCurrentPage[i].productID + `" title="">
+                                <img width="300" height="300" class="lazyload loaded" src="https://cdn.shopvnb.com/img/300x300/uploads/gallery/vot-cau-long-victor-brave-sword-ltd-pro-noi-dia-taiwan-jpg-4_1711143954.webp" data-src="https://cdn.shopvnb.com/img/300x300/uploads/gallery/vot-cau-long-victor-brave-sword-ltd-pro-noi-dia-taiwan-jpg-4_1711143954.webp" alt="Vợt Cầu Lông Victor Brave Sword LTD Pro (Nội Địa Taiwan)" data-was-processed="true">
+                            </a>
+                        </div>
+                        <div class="product-info">
+                            <h3 class="product-name"><a href="index.php?control=ProductDetail&productID=`+ productsOnCurrentPage[i].productID + `" title="Vợt Cầu Lông Victor Brave Sword LTD Pro (Nội Địa Taiwan)">` + productsOnCurrentPage[i].name + `</a></h3>
+                            <div class="price-box-nav">
+                                <span class="price">`+ formatPrice(productsOnCurrentPage[i].price) + ` ₫</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+    }
+    document.getElementById("show-product").innerHTML = htmlContent;
+
+    // Xóa class 'active' và 'current-page' khỏi tất cả các thẻ li
+    var liElements = document.querySelectorAll('.number-page li');
+    liElements.forEach(function (li) {
+        li.classList.remove('active', 'current-page');
+    });
+
+    // Thêm class 'active' và 'current-page' vào thẻ li được click
+    var currentLi = document.querySelector('.number-page li:nth-child(' + page + ')');
+    currentLi.classList.add('active', 'current-page');
+}
+
 function formatPrice(price) {
     return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+function loadNavFilter() {
+    var totalPages = Math.ceil(filterArray.length / getProductPerPage());
+    //console.log(filterArray.length);
+    var htmlContent = '';
+
+    for (var i = 1; i <= totalPages; i++) {
+        if (i == 1) {
+            htmlContent += '<li onclick="loadPageFilter(' + i + ', ' + getProductPerPage() + ')" class="current-page active" data-page="' + i + '" data-products-per-page="' + getProductPerPage() + '">';
+            htmlContent += '<a>' + i + '</a>';
+            htmlContent += '</li>';
+        } else {
+            htmlContent += '<li onclick="loadPageFilter(' + i + ', ' + getProductPerPage() + ')" data-page="' + i + '" data-products-per-page="' + getProductPerPage() + '">';
+            htmlContent += '<a>' + i + '</a>';
+            htmlContent += '</li>';
+        }
+    }
+
+    document.getElementById("number-page").innerHTML = htmlContent;
 }
 
 
@@ -84,7 +183,6 @@ function loadPerPage() {
     var productsPerPage = document.getElementById("mySelect").value;
     var id = getIdFromUrl();
 
-    // Gọi loadPage và loadNav với id và số 6
     loadPage(1, productsPerPage, id);
     loadNav(productsPerPage, id);
 }
@@ -93,23 +191,7 @@ function loadPerPageFilter() {
     var productsPerPage = document.getElementById("mySelect").value;
 
     loadPageFilter(1, productsPerPage);
-    var totalPages = Math.ceil(filterArray.length / getProductPerPage());
-    //console.log(filterArray.length);
-    var htmlContent = '';
-
-    for (var i = 1; i <= totalPages; i++) {
-        if (i == 1) {
-            htmlContent += '<li onclick="loadPageFilter(' + i + ', ' + getProductPerPage() + ')" class="current-page active" data-page="' + i + '" data-products-per-page="' + getProductPerPage() + '">';
-            htmlContent += '<a>' + i + '</a>';
-            htmlContent += '</li>';
-        } else {
-            htmlContent += '<li onclick="loadPageFilter(' + i + ', ' + getProductPerPage() + ')" data-page="' + i + '" data-products-per-page="' + getProductPerPage() + '">';
-            htmlContent += '<a>' + i + '</a>';
-            htmlContent += '</li>';
-        }
-    }
-
-    document.getElementById("number-page").innerHTML = htmlContent;
+    loadNavFilter();
 }
 
 function getProductPerPage() {
@@ -122,24 +204,27 @@ window.addEventListener("load", function () {
     var id = getIdFromUrl();
 
     // Gọi loadPage và loadNav với id và số 6
-    loadNav(6, id);
-    loadPage(1, 6, id);
+    loadNav(8, id);
+    loadPage(1, 8, id);
 
     if (countFilter == 0) {
         document.getElementById("filter-container").classList.add("hide");
     }
+
+    uncheckAllInputs()
 });
 
 function getIdFromUrl() {
     // Lấy đường dẫn URL hiện tại
     var url = window.location.href;
 
-    // Phân tích đường dẫn URL để lấy id mong muốn
-    var parts = url.split('=');
-    var id = parts[1]; // Giả sử id nằm sau dấu '=' trong đường dẫn URL
+    // Phân tích đường dẫn URL để lấy tham số id
+    var urlParams = new URLSearchParams(new URL(url).search);
+    var id = urlParams.get('id');
 
     return id;
 }
+
 
 function toggleFilter(checkbox) {
     var filterId = checkbox.id;
@@ -178,6 +263,8 @@ function toggleFilter(checkbox) {
 }
 
 function removeFilteredItem(id) {
+    console.log(selectedFilters.thuong_hieu);
+
     var filterItem = document.getElementById("filter-item-" + id);
     var filterItem2 = document.getElementById(id);
 
@@ -193,6 +280,7 @@ function removeFilteredItem(id) {
         } else {
             document.getElementById("filter-container").classList.remove("hide");
         }
+
     }
 }
 
@@ -207,48 +295,72 @@ function clearAllFiltered() {
 
     var filterContainerElement = document.getElementById("filter-container");
     filterContainerElement.classList.add("hide");
+
+    loadNav(getProductPerPage(),getIdFromUrl());
+    loadPage(1,getProductPerPage(),getIdFromUrl());
 }
 
-function loadPageFilter(page, productsPerPage) {
+function sapXep(arr, key) {
+    if (key == 'alpha-asc') {
+        return arr.sort(function (a, b) {
+            return a.name.localeCompare(b.name);
+        });
+    } else if (key == 'alpha-desc') {
+        return arr.sort(function (a, b) {
+            return b.name.localeCompare(a.name);
+        });
+    } else if (key == 'price-asc') {
+        return arr.sort(function (a, b) {
+            return a.price - b.price;
+        });
+    } else if (key == 'price-desc') {
+        return arr.sort(function (a, b) {
+            return b.price - a.price;
+        });
+    } else if (key == 'created-desc') {
 
-    var offset = (page - 1) * productsPerPage;
-    var productsOnCurrentPage = filterArray.slice(offset, offset + productsPerPage);
+    } else if (key == 'created-asc') {
 
-    var htmlContent = '';
-    for (var i = 0; i < productsOnCurrentPage.length; i++) {
-        htmlContent += `<div class="col-6 col-md-4">
-                    <div class="item_product_main">
-                        <div class="product-thumbnail">
-                            <a class="product_overlay" href="product_detail.php?productID=`+ productsOnCurrentPage[i].productID + `" title=""></a>
-                            <a class="image_thumb" href="product_detail.php?productID=`+ productsOnCurrentPage[i].productID + `" title="">
-                                <img width="300" height="300" class="lazyload loaded" src="https://cdn.shopvnb.com/img/300x300/uploads/gallery/vot-cau-long-victor-brave-sword-ltd-pro-noi-dia-taiwan-jpg-4_1711143954.webp" data-src="https://cdn.shopvnb.com/img/300x300/uploads/gallery/vot-cau-long-victor-brave-sword-ltd-pro-noi-dia-taiwan-jpg-4_1711143954.webp" alt="Vợt Cầu Lông Victor Brave Sword LTD Pro (Nội Địa Taiwan)" data-was-processed="true">
-                            </a>
-                        </div>
-                        <div class="product-info">
-                            <h3 class="product-name"><a href="product_detail.php?productID=`+ productsOnCurrentPage[i].productID + `" title="Vợt Cầu Lông Victor Brave Sword LTD Pro (Nội Địa Taiwan)">` + productsOnCurrentPage[i].name + `</a></h3>
-                            <div class="price-box">
-                                <span class="price">`+ formatPrice(productsOnCurrentPage[i].price) + ` ₫</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
     }
-    document.getElementById("show-product").innerHTML = htmlContent;
-
-    // Xóa class 'active' và 'current-page' khỏi tất cả các thẻ li
-    var liElements = document.querySelectorAll('.number-page li');
-    liElements.forEach(function (li) {
-        li.classList.remove('active', 'current-page');
-    });
-
-    // Thêm class 'active' và 'current-page' vào thẻ li được click
-    var currentLi = document.querySelector('.number-page li:nth-child(' + page + ')');
-    currentLi.classList.add('active', 'current-page');
 }
+
+function sortby(key) {
+    if (filterArray.length <= 0) {
+        getAllByCatalogAndBrand()
+    }
+    sapXep(filterArray, key);
+    console.log(filterArray);
+    loadNavFilter();
+    loadPageFilter(1,getProductPerPage());
+
+    document.getElementById("page-config").innerHTML = '<label for="mySelect">Item per page: </label>' +
+                        '<select name="mySelect" id="mySelect" onchange="loadPerPageFilter()">' +
+                        '<option value="4">4</option>' +
+                        '<option value="8" selected>8</option>' +
+                        '<option value="12">12</option>' +
+                        '<option value="16">16</option>' +
+                        '</select>';
+                        if (key == 'alpha-asc') {
+                            document.getElementById('keysort').innerHTML='A → Z';
+                        } else if (key == 'alpha-desc') {
+                            document.getElementById('keysort').innerHTML='Z → A';
+                        } else if (key == 'price-asc') {
+                            document.getElementById('keysort').innerHTML='Giá tăng dần';
+                        } else if (key == 'price-desc') {
+                            document.getElementById('keysort').innerHTML='Giá giảm dần';
+                        } else if (key == 'created-desc') {
+                    
+                        } else if (key == 'created-asc') {
+                    
+                        }
+    
+}
+
+
 
 $(document).ready(function () {
     // Khởi tạo một object để lưu trữ các giá trị của các nhóm filter
-    var selectedFilters = {};
+
 
     // Xử lý sự kiện khi các input checkbox thay đổi trạng thái
     $("input[type='checkbox']").change(function () {
@@ -279,6 +391,8 @@ $(document).ready(function () {
             }
         }
 
+        console.log(selectedFilters);
+
 
         if (checkedCount > 0) {
             // Gửi yêu cầu lọc đến máy chủ bằng AJAX
@@ -293,7 +407,7 @@ $(document).ready(function () {
                 }, // Truyền object chứa thông tin các bộ lọc đã chọn
                 success: function (response) {
                     filterArray = JSON.parse(response);
-                    //console.log(response);
+                    console.log(response);
                     var totalPages = Math.ceil(filterArray.length / getProductPerPage());
                     //console.log(filterArray.length);
                     var htmlContent = '';
@@ -313,47 +427,15 @@ $(document).ready(function () {
                     document.getElementById("number-page").innerHTML = htmlContent;
 
                     //--------------------------//
-                    var offset = (1 - 1) * getProductPerPage();
-                    var productsOnCurrentPage = filterArray.slice(offset, offset + getProductPerPage());
-                    var htmlContent = '';
-                    for (var i = 0; i < productsOnCurrentPage.length; i++) {
-                        htmlContent += `<div class="col-6 col-md-4">
-                    <div class="item_product_main">
-                        <div class="product-thumbnail">
-                            <a class="product_overlay" href="product_detail.php?productID=`+ productsOnCurrentPage[i].productID + `" title=""></a>
-                            <a class="image_thumb" href="product_detail.php?productID=`+ productsOnCurrentPage[i].productID + `" title="">
-                                <img width="300" height="300" class="lazyload loaded" src="https://cdn.shopvnb.com/img/300x300/uploads/gallery/vot-cau-long-victor-brave-sword-ltd-pro-noi-dia-taiwan-jpg-4_1711143954.webp" data-src="https://cdn.shopvnb.com/img/300x300/uploads/gallery/vot-cau-long-victor-brave-sword-ltd-pro-noi-dia-taiwan-jpg-4_1711143954.webp" alt="Vợt Cầu Lông Victor Brave Sword LTD Pro (Nội Địa Taiwan)" data-was-processed="true">
-                            </a>
-                        </div>
-                        <div class="product-info">
-                            <h3 class="product-name"><a href="product_detail.php?productID=`+ productsOnCurrentPage[i].productID + `" title="Vợt Cầu Lông Victor Brave Sword LTD Pro (Nội Địa Taiwan)">` + productsOnCurrentPage[i].name + `</a></h3>
-                            <div class="price-box">
-                                <span class="price">`+ formatPrice(productsOnCurrentPage[i].price) + ` ₫</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
-                    }
-                    document.getElementById("show-product").innerHTML = htmlContent;
-
-                    // Xóa class 'active' và 'current-page' khỏi tất cả các thẻ li
-                    var liElements = document.querySelectorAll('.number-page li');
-                    liElements.forEach(function (li) {
-                        li.classList.remove('active', 'current-page');
-                    });
-
-                    // Thêm class 'active' và 'current-page' vào thẻ li được click
-                    var currentLi = document.querySelector('.number-page li:nth-child(' + 1 + ')');
-                    currentLi.classList.add('active', 'current-page');
-
+                    loadPageFilter(1, getProductPerPage());
 
                     //--------------------------//
                     document.getElementById("page-config").innerHTML = '<label for="mySelect">Item per page: </label>' +
                         '<select name="mySelect" id="mySelect" onchange="loadPerPageFilter()">' +
-                        '<option value="3">3</option>' +
-                        '<option value="6" selected>6</option>' +
-                        '<option value="9">9</option>' +
+                        '<option value="4">4</option>' +
+                        '<option value="8" selected>8</option>' +
                         '<option value="12">12</option>' +
+                        '<option value="16">16</option>' +
                         '</select>';
 
                 }
@@ -363,8 +445,8 @@ $(document).ready(function () {
             var id = getIdFromUrl();
 
             // Gọi loadPage và loadNav với id và số 6
-            loadNav(6, id);
-            loadPage(1, 6, id);
+            loadNav(8, id);
+            loadPage(1, 8, id);
 
             if (countFilter == 0) {
                 document.getElementById("filter-container").classList.add("hide");
@@ -372,10 +454,10 @@ $(document).ready(function () {
 
             document.getElementById("page-config").innerHTML = '<label for="mySelect">Item per page: </label>' +
                 '<select name="mySelect" id="mySelect" onchange="loadPerPage()">' +
-                '<option value="3">3</option>' +
-                '<option value="6" selected>6</option>' +
-                '<option value="9">9</option>' +
+                '<option value="4">4</option>' +
+                '<option value="8" selected>8</option>' +
                 '<option value="12">12</option>' +
+                '<option value="16">16</option>' +
                 '</select>';
         }
     });

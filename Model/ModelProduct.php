@@ -3,6 +3,7 @@ require_once 'database.php';
 
 require_once(__DIR__ . '/Entity/Product.php');
 
+
 class ModelProduct
 {
     private $db;
@@ -38,6 +39,131 @@ class ModelProduct
         return $products;
     }
 
+    public function getListProductBySpeed($speed)
+    {
+        $query = "SELECT *
+        FROM product p, variantdetail vd, variant v
+        WHERE p.productID=v.productID and v.variantID=vd.variantID and vd.speed=$speed";
+        $result = $this->db->select($query);
+        $products = [];
+        if ($result && $result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                $product = new Product(
+                    $row['productID'],
+                    $row['brandID'],
+                    $row['catalogID'],
+                    $row['name'],
+                    $row['description'],
+                    $row['status'],
+                    $row['price'],
+                    $row['discount']
+                );
+                $products[] = $product;
+            }
+        }
+        return $products;
+    }
+
+    public function getListProductBySize($size)
+    {
+        $query = "SELECT *
+        FROM product p, variantdetail vd, variant v
+        WHERE p.productID=v.productID and v.variantID=vd.variantID and vd.size=$size";
+        $result = $this->db->select($query);
+        $products = [];
+        if ($result && $result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                $product = new Product(
+                    $row['productID'],
+                    $row['brandID'],
+                    $row['catalogID'],
+                    $row['name'],
+                    $row['description'],
+                    $row['status'],
+                    $row['price'],
+                    $row['discount']
+                );
+                $products[] = $product;
+            }
+        }
+        return $products;
+    }
+
+    public function getListProductByWeight($weight)
+    {
+        $query = "SELECT *
+        FROM product p, variantdetail vd, variant v
+        WHERE p.productID=v.productID and v.variantID=vd.variantID and vd.weight='$weight'";
+        $result = $this->db->select($query);
+        $products = [];
+        if ($result && $result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                $product = new Product(
+                    $row['productID'],
+                    $row['brandID'],
+                    $row['catalogID'],
+                    $row['name'],
+                    $row['description'],
+                    $row['status'],
+                    $row['price'],
+                    $row['discount']
+                );
+                $products[] = $product;
+            }
+        }
+        return $products;
+    }
+
+    public function getListProductByColor($color)
+    {
+        $query = "SELECT *
+        FROM product p, variantdetail vd, variant v
+        WHERE p.productID=v.productID and v.variantID=vd.variantID and p.catalogID=2 and vd.color='$color'";
+        $result = $this->db->select($query);
+        $products = [];
+        if ($result && $result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                $product = new Product(
+                    $row['productID'],
+                    $row['brandID'],
+                    $row['catalogID'],
+                    $row['name'],
+                    $row['description'],
+                    $row['status'],
+                    $row['price'],
+                    $row['discount']
+                );
+                $products[] = $product;
+            }
+        }
+        return $products;
+    }
+
+    public function getListProductByGrip($grip)
+    {
+        $query = "SELECT *
+        FROM product p, variantdetail vd, variant v
+        WHERE p.productID=v.productID and v.variantID=vd.variantID and vd.grip='$grip'";
+        $result = $this->db->select($query);
+        $products = [];
+        if ($result && $result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                $product = new Product(
+                    $row['productID'],
+                    $row['brandID'],
+                    $row['catalogID'],
+                    $row['name'],
+                    $row['description'],
+                    $row['status'],
+                    $row['price'],
+                    $row['discount']
+                );
+                $products[] = $product;
+            }
+        }
+        return $products;
+    }
+
     // Lấy thông tin sản phẩm dựa trên ID
     public function getProductByID($productID)
     {
@@ -61,6 +187,18 @@ class ModelProduct
         }
 
         return null;
+    }
+
+    public function getProductByCode($ProductID)
+    {
+        $query = "SELECT * FROM product JOIN ordertransaction ON product.productID = ordertransaction.productID 
+                    WHERE ordertransaction.productID = '$ProductID'";
+        $result = $this->db->select($query);
+        if ($result) {
+            return $result->fetch_assoc();
+        } else {
+            return false;
+        }
     }
 
     // Phương thức để lấy thông tin sản phẩm bằng catalogID
@@ -92,11 +230,23 @@ class ModelProduct
     {
         $query = "SELECT * FROM product WHERE brandID = '$brandID'";
         $result = $this->db->select($query);
-        if ($result) {
-            return $result->fetch_assoc();
-        } else {
-            return false;
+        $products = [];
+        if ($result && $result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                $product = new Product(
+                    $row['productID'],
+                    $row['brandID'],
+                    $row['catalogID'],
+                    $row['name'],
+                    $row['description'],
+                    $row['status'],
+                    $row['price'],
+                    $row['discount']
+                );
+                $products[] = $product;
+            }
         }
+        return $products;
     }
 
     // Phương thức để lấy thông tin sản phẩm bằng name
@@ -112,19 +262,19 @@ class ModelProduct
     }
 
     // Thêm sản phẩm mới vào cơ sở dữ liệu
-    public function addProduct($product)
-    {
-        $productID = $product->getProductID();
-        $brandID = $product->getBrandID();
-        $catalogID = $product->getCatalogID();
-        $name = $product->getName();
+    // public function addProduct($product)
+    // {
+    //     $productID = $product->getProductID();
+    //     $brandID = $product->getBrandID();
+    //     $catalogID = $product->getCatalogID();
+    //     $name = $product->getName();
 
-        $description = $product->getDescription();
+    //     $description = $product->getDescription();
 
-        $query = "INSERT INTO product (productID, brandID, catalogID, name, description) VALUES ('$productID', '$brandID', '$catalogID', '$name', '$urlAvatar')";
+    //     $query = "INSERT INTO product (productID, brandID, catalogID, name, description) VALUES ('$productID', '$brandID', '$catalogID', '$name', '$urlAvatar')";
 
-        return $this->db->insert($query);
-    }
+    //     return $this->db->insert($query);
+    // }
 
     // Cập nhật thông tin sản phẩm trong cơ sở dữ liệu
     public function updateProduct($product)
